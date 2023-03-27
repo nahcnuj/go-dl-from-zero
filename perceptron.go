@@ -1,7 +1,9 @@
 package main
 
-func And(x [2]float64) bool {
-	w := [2]float64{0.5, 0.5} // weights
-	b := -0.7                 // bias
-	return b+x[0]*w[0]+x[1]*w[1] > 0
+import "gonum.org/v1/gonum/mat"
+
+func And(x mat.Vector) bool {
+	w := mat.NewVecDense(2, []float64{0.5, 0.5}) // weight
+	b := -0.7                                    // bias
+	return mat.Dot(x, w)+b > 0
 }

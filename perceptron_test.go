@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"testing"
+
+	"gonum.org/v1/gonum/mat"
+)
 
 func TestAnd(t *testing.T) {
 	tests := []struct {
@@ -15,7 +19,8 @@ func TestAnd(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		got := And(tc.x)
+		x := mat.NewVecDense(len(tc.x), tc.x[:])
+		got := And(x)
 
 		if got != tc.want {
 			t.Fatalf("%s: expected: %v, got: %v", tc.name, tc.want, got)
