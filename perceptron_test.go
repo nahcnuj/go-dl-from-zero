@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"gonum.org/v1/gonum/mat"
+	"go-dl-from-zero/mat"
 )
 
 func TestAnd(t *testing.T) {
@@ -19,7 +19,7 @@ func TestAnd(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		x := mat.NewVecDense(len(tc.x), tc.x[:])
+		x := mat.NewVector(tc.x[:])
 		got := And(x)
 
 		if got != tc.want {
