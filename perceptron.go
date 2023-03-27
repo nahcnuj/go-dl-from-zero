@@ -1,6 +1,7 @@
 package main
 
-func And(x1, x2 float64) bool {
-	w1, w2, b := 0.5, 0.5, -0.7 // weights and bias
-	return b+x1*w1+x2*w2 > 0
+func And(x [2]float64) bool {
+	w := [2]float64{0.5, 0.5} // weights
+	b := -0.7                 // bias
+	return b+x[0]*w[0]+x[1]*w[1] > 0
 }
