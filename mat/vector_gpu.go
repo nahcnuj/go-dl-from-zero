@@ -93,7 +93,7 @@ func (gpu *GPUBackend) addVectors(a *gpuVector, b *gpuVector) *gpuVector {
 	gpu.device.queue.EnqueueWriteBuffer(aBuf, true, wa)
 	gpu.device.queue.EnqueueWriteBuffer(bBuf, true, wb)
 
-	if err = gpu.device.queue.EnqueueNDRangeKernel(add, 1, []uint64{128}); err != nil {
+	if err = gpu.device.queue.EnqueueNDRangeKernel(add, 1, []uint64{dim}); err != nil {
 		panic(err)
 	}
 
@@ -114,19 +114,21 @@ func (gpu *GPUBackend) dot(a *gpuVector, b *gpuVector) float64 {
 		panic("kernel function not found")
 	}
 
-	retBuf, err := gpu.device.context.CreateBuffer([]opencl.MemFlags{opencl.MemWriteOnly}, floatSize*1)
+	dim := uint64(a.N)
+
+	retBuf, err := gpu.device.context.CreateBuffer([]opencl.MemFlags{opencl.MemWriteOnly}, 1*floatSize)
 	if err != nil {
 		panic(err)
 	}
 	defer retBuf.Release()
 
-	aBuf, err := gpu.device.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, floatSize*uint64(a.N))
+	aBuf, err := gpu.device.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
 	if err != nil {
 		panic(err)
 	}
 	defer aBuf.Release()
 
-	bBuf, err := gpu.device.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, floatSize*uint64(b.N))
+	bBuf, err := gpu.device.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
 	if err != nil {
 		panic(err)
 	}
@@ -142,7 +144,7 @@ func (gpu *GPUBackend) dot(a *gpuVector, b *gpuVector) float64 {
 		panic(err)
 	}
 
-	wa, wb := make([]float32, a.N), make([]float32, b.N)
+	wa, wb := make([]float32, dim), make([]float32, dim)
 	for i := 0; i < a.N; i++ {
 		wa[i] = a.Data[i]
 		wb[i] = b.Data[i]
@@ -150,7 +152,7 @@ func (gpu *GPUBackend) dot(a *gpuVector, b *gpuVector) float64 {
 	gpu.device.queue.EnqueueWriteBuffer(aBuf, true, wa)
 	gpu.device.queue.EnqueueWriteBuffer(bBuf, true, wb)
 
-	if err = gpu.device.queue.EnqueueNDRangeKernel(dot, 1, []uint64{uint64(a.N)}); err != nil {
+	if err = gpu.device.queue.EnqueueNDRangeKernel(dot, 1, []uint64{dim}); err != nil {
 		panic(err)
 	}
 
