@@ -3,6 +3,7 @@ module go-dl-from-zero
 go 1.20
 
 require (
+	github.com/PassKeyRa/go-opencl v0.0.0-20220406222639-89fc1cb60037
 	gonum.org/v1/gonum v0.12.0
 	gonum.org/v1/plot v0.12.0
 )

@@ -1,15 +1,24 @@
 package mat
 
-import "gonum.org/v1/gonum/mat"
+import (
+	"gonum.org/v1/gonum/mat"
+)
 
-type Vector interface {
-	mat.Vector
+type cpuVector struct {
+	*mat.VecDense
 }
 
-func NewVector(v []float64) Vector {
-	return mat.NewVecDense(len(v), v)
+// NewVector は引数の要素を持つベクトルを作成する。
+func (*CPUBackend) NewVector(v []float64) Vector {
+	return cpuVector{mat.NewVecDense(len(v), v)}
 }
 
-func Dot(a, b Vector) float64 {
-	return mat.Dot(a, b)
+func (*CPUBackend) Dot(a, b Vector) float64 {
+	return mat.Dot(a.(cpuVector), b.(cpuVector))
+}
+
+func (cpu *CPUBackend) AddVectors(a, b Vector) Vector {
+	ret := mat.NewVecDense(a.Len(), nil)
+	ret.AddVec(a.(cpuVector), b.(cpuVector))
+	return cpuVector{ret}
 }
