@@ -16,8 +16,3 @@ func NewCPUBackend() Backend {
 func (*CPUBackend) Release() {
 	// do nothing
 }
-
-type Vector interface {
-	Len() int
-	AtVec(int) float64
-}

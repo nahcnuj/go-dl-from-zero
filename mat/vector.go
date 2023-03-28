@@ -4,6 +4,11 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
+type Vector interface {
+	Len() int
+	AtVec(int) float64
+}
+
 type cpuVector struct {
 	*mat.VecDense
 }
