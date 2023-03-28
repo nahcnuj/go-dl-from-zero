@@ -13,9 +13,12 @@ type cpuVector struct {
 	*mat.VecDense
 }
 
-// NewVector は引数の要素を持つベクトルを作成する。
 func (*CPUBackend) NewVector(v []float64) Vector {
 	return cpuVector{mat.NewVecDense(len(v), v)}
+}
+
+func (cpu *CPUBackend) ZeroVector(dim int) Vector {
+	return newZeroVector(cpu, dim)
 }
 
 func (*CPUBackend) Dot(a, b Vector) float64 {

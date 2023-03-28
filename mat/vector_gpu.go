@@ -28,8 +28,6 @@ func (v *gpuVector) AtVec(i int) float64 {
 	return float64(v.Data[i])
 }
 
-// NewVector は引数の要素を持つベクトルを作成する。
-//
 // 注意：引数の型は float64 のスライスであるが、OpenCL の都合で計算は float32 で行われる。
 func (gpu *GPUBackend) NewVector(v []float64) Vector {
 	downsized := make([]float32, len(v))
@@ -37,6 +35,10 @@ func (gpu *GPUBackend) NewVector(v []float64) Vector {
 		downsized[i] = float32(v)
 	}
 	return &gpuVector{N: len(v), Data: downsized}
+}
+
+func (gpu *GPUBackend) ZeroVector(dim int) Vector {
+	return newZeroVector(gpu, dim)
 }
 
 func (gpu *GPUBackend) AddVectors(a Vector, b Vector) Vector {
