@@ -5,6 +5,7 @@ type Backend interface {
 
 	ZeroVector(dim int) Vector
 	AddVectors(a, b Vector) Vector
+	Dot(a, b Vector) float64
 
 	Release()
 }

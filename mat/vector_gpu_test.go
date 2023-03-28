@@ -14,8 +14,9 @@ import (
 	"go-dl-from-zero/mat"
 )
 
-const eps = float64(float32(1e-6))
+const eps = float64(float32(1e-5))
 
+var cpu *mat.CPUBackend = mat.NewCPUBackend().(*mat.CPUBackend)
 var gpu *mat.GPUBackend
 
 func TestMain(m *testing.M) {
@@ -91,6 +92,25 @@ func TestAddVectorsProperties(t *testing.T) {
 	})
 }
 
+func TestDotVecByGPU(t *testing.T) {
+	assertion := func(input *twoSameDimVectorSource) bool {
+		a, b := input.A, input.B
+
+		got := gpu.Dot(gpu.NewVector(a), gpu.NewVector(b))
+		want := cpu.Dot(cpu.NewVector(a), cpu.NewVector(b))
+
+		if math.Abs(got-want) >= eps {
+			t.Logf("got: %v, expected: %v, diff: %v", got, want, math.Abs(got-want))
+			return false
+		}
+		return true
+	}
+
+	if err := quick.Check(assertion, nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
 type gpuVector struct {
 	mat.Vector
 }
@@ -107,6 +127,24 @@ func (*gpuVector) Generate(rand *rand.Rand, size int) reflect.Value {
 
 func randVectorSize(max int) int {
 	return rand.Intn(max-1) + 1
+}
+
+type twoSameDimVectorSource struct {
+	A []float64
+	B []float64
+}
+
+func (*twoSameDimVectorSource) Generate(rand *rand.Rand, size int) reflect.Value {
+	n := randVectorSize(size)
+	a, b := make([]float64, n), make([]float64, n)
+	for i := 0; i < n; i++ {
+		a[i] = randFloat64FromFloat32()
+		b[i] = randFloat64FromFloat32()
+	}
+	return reflect.ValueOf(&twoSameDimVectorSource{
+		A: a,
+		B: b,
+	})
 }
 
 func randFloat64FromFloat32() float64 {

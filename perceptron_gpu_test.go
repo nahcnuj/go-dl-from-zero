@@ -1,4 +1,4 @@
-//go:build cpu
+//go:build gpu
 
 package main
 
@@ -12,14 +12,19 @@ import (
 var dl DeepLearning
 
 func TestMain(m *testing.M) {
-	dl = NewDeepLearning(mat.NewCPUBackend())
-	defer dl.Release()
+	gpu, err := mat.NewGPUBackend()
+	if err != nil {
+		panic(err)
+	}
+	defer gpu.Release()
+
+	dl = NewDeepLearning(gpu)
 
 	ret := m.Run()
 	os.Exit(ret)
 }
 
-func TestAndByCPU(t *testing.T) {
+func TestAndByGPU(t *testing.T) {
 	tests := []struct {
 		name string
 		x    [2]float64

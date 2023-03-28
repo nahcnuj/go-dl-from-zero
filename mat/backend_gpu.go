@@ -55,11 +55,27 @@ kernel void vec_add(global float *out, global float *a, global float *b)
 	size_t i = get_global_id(0);
 	out[i] = a[i] + b[i];
 }
+
+kernel void vec_dot(global float *out, global float *a, global float *b)
+{
+	size_t gid = get_global_id(0);
+	size_t lid = get_local_id(0);
+	size_t local_size = get_local_size(0);
+	out[gid] = a[gid] * b[gid];
+	barrier(CLK_LOCAL_MEM_FENCE);
+
+	if (lid == 0) {
+		for (int i = local_size - 1; i > 0; --i) {
+			out[get_group_id(0)] += out[i];
+		}
+	}
+}
 `
 
 func getKernelNames() []string {
 	return []string{
 		"vec_add",
+		"vec_dot",
 	}
 }
 
