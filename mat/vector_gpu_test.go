@@ -4,6 +4,7 @@ package mat_test
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"os"
 	"reflect"
@@ -12,6 +13,8 @@ import (
 
 	"go-dl-from-zero/mat"
 )
+
+const eps = float64(float32(1e-6))
 
 var gpu *mat.GPUBackend
 
@@ -50,14 +53,7 @@ func TestAddVecByGPU(t *testing.T) {
 
 		got := gpu.AddVectors(x, y)
 
-		if got.Len() != want.Len() {
-			t.Errorf("%s, dimension expected: %v, got: %v", name, want.Len(), got.Len())
-		}
-		for i := 0; i < got.Len(); i++ {
-			if got.AtVec(i) != want.AtVec(i) {
-				t.Errorf("%s, [%d] expected: %v, got: %v", name, i, want.AtVec(i), got.AtVec(i))
-			}
-		}
+		assertEqualVectors(t, got, want)
 	}
 }
 
@@ -75,12 +71,13 @@ func TestAddVectorsProperties(t *testing.T) {
 
 			got := gpu.AddVectors(a.Vector, b)
 
+			assertEqualVectors(t, got, gpu.NewVector(make([]float64, dim)))
 			if got.Len() != dim {
 				t.Logf("dimension expected: %v, got: %v", dim, got.Len())
 				return false
 			}
 			for i := 0; i < dim; i++ {
-				if got.AtVec(i) != 0 {
+				if math.Abs(got.AtVec(i)) >= eps {
 					t.Logf("[%d] expected: 0, got: %v", i, got.AtVec(i))
 					return false
 				}
@@ -114,4 +111,17 @@ func randVectorSize(max int) int {
 
 func randFloat64FromFloat32() float64 {
 	return float64(rand.Float32())
+}
+
+func assertEqualVectors(t testing.TB, got, want mat.Vector) {
+	t.Helper()
+
+	if got.Len() != want.Len() {
+		t.Errorf("dimension got: %v, expected: %v", got.Len(), want.Len())
+	}
+	for i := 0; i < got.Len(); i++ {
+		if math.Abs(got.AtVec(i)-want.AtVec(i)) >= eps {
+			t.Errorf("[%d] got: %v, expected: %v", i, got.AtVec(i), want.AtVec(i))
+		}
+	}
 }
