@@ -83,7 +83,6 @@ type GPUDevice struct {
 	device  opencl.Device
 	context opencl.Context
 	kernels map[string]opencl.Kernel
-	queue   opencl.CommandQueue
 }
 
 func NewGPUDevice(d opencl.Device) (device *GPUDevice, err error) {
@@ -92,17 +91,10 @@ func NewGPUDevice(d opencl.Device) (device *GPUDevice, err error) {
 		return nil, err
 	}
 
-	q, err := c.CreateCommandQueue(d)
-	if err != nil {
-		c.Release()
-		return nil, err
-	}
-
 	device = &GPUDevice{
 		device:  d,
 		context: c,
 		kernels: make(map[string]opencl.Kernel),
-		queue:   q,
 	}
 	if err = device.createKernels(); err != nil {
 		device.Release()
@@ -113,7 +105,6 @@ func NewGPUDevice(d opencl.Device) (device *GPUDevice, err error) {
 
 func (d *GPUDevice) Release() {
 	d.context.Release()
-	d.queue.Release()
 	for _, k := range d.kernels {
 		k.Release()
 	}

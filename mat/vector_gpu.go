@@ -85,23 +85,28 @@ func (gpu *GPUBackend) addVectors(a *gpuVector, b *gpuVector) *gpuVector {
 		panic(err)
 	}
 
-	wa, wb := make([]float32, dim), make([]float32, dim)
-	for i := 0; i < a.N; i++ {
-		wa[i] = a.Data[i]
-		wb[i] = b.Data[i]
+	queue, err := gpu.device.context.CreateCommandQueue(gpu.device.device)
+	if err != nil {
+		panic(err)
 	}
-	gpu.device.queue.EnqueueWriteBuffer(aBuf, true, wa)
-	gpu.device.queue.EnqueueWriteBuffer(bBuf, true, wb)
+	defer queue.Release()
 
-	if err = gpu.device.queue.EnqueueNDRangeKernel(add, 1, []uint64{dim}); err != nil {
+	if err = queue.EnqueueWriteBuffer(aBuf, true, a.Data); err != nil {
+		panic(err)
+	}
+	if err = queue.EnqueueWriteBuffer(bBuf, true, b.Data); err != nil {
 		panic(err)
 	}
 
-	gpu.device.queue.Flush()
-	gpu.device.queue.Finish()
+	if err = queue.EnqueueNDRangeKernel(add, 1, []uint64{dim}); err != nil {
+		panic(err)
+	}
+
+	queue.Flush()
+	queue.Finish()
 
 	ret := make([]float32, dim)
-	if err = gpu.device.queue.EnqueueReadBuffer(retBuf, true, ret); err != nil {
+	if err = queue.EnqueueReadBuffer(retBuf, true, ret); err != nil {
 		panic(err)
 	}
 
@@ -144,24 +149,29 @@ func (gpu *GPUBackend) dot(a *gpuVector, b *gpuVector) float64 {
 		panic(err)
 	}
 
-	wa, wb := make([]float32, dim), make([]float32, dim)
-	for i := 0; i < a.N; i++ {
-		wa[i] = a.Data[i]
-		wb[i] = b.Data[i]
+	queue, err := gpu.device.context.CreateCommandQueue(gpu.device.device)
+	if err != nil {
+		panic(err)
 	}
-	gpu.device.queue.EnqueueWriteBuffer(aBuf, true, wa)
-	gpu.device.queue.EnqueueWriteBuffer(bBuf, true, wb)
+	defer queue.Release()
 
-	if err = gpu.device.queue.EnqueueNDRangeKernel(dot, 1, []uint64{dim}); err != nil {
+	if err = queue.EnqueueWriteBuffer(aBuf, true, a.Data); err != nil {
+		panic(err)
+	}
+	if err = queue.EnqueueWriteBuffer(bBuf, true, b.Data); err != nil {
 		panic(err)
 	}
 
-	gpu.device.queue.Flush()
-	gpu.device.queue.Finish()
+	if err = queue.EnqueueNDRangeKernel(dot, 1, []uint64{dim}); err != nil {
+		panic(err)
+	}
+
+	queue.Flush()
+	queue.Finish()
 
 	ret := make([]float32, 1)
 
-	if err = gpu.device.queue.EnqueueReadBuffer(retBuf, true, ret); err != nil {
+	if err = queue.EnqueueReadBuffer(retBuf, true, ret); err != nil {
 		panic(err)
 	}
 
