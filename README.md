@@ -4,19 +4,23 @@
 
 この本では扱われていないが、OpenCLによる実装にもチャレンジする。
 
+なお、OpenCLで標準的に扱えるのは`float32`（`float`、単精度浮動小数点数）型で、[Gonum](https://pkg.go.dev/gonum.org/v1/gonum)で扱えるのは`float64`（`double`倍精度浮動小数点数）型と異なっているため、CPU実装とGPU実装の間に互換性はない。
+
+## CPU
+
+[Gonum](https://pkg.go.dev/gonum.org/v1/gonum)を利用して、倍精度浮動小数点数で計算する。
+
+## GPU
+
+[go-opencl](https://github.com/PassKeyRa/go-opencl)を利用して、単精度浮動小数点数で計算する。
+
 ## ビルド
 
-### CPU
-
 ```sh
+# CPU
 go build
-```
 
-### GPU
-
-OpenCLのランタイムが必要です。`CGO_CFLAGS`と`CGO_LDFLAGS`を設定してください。
-
-```sh
+# GPU (needs OpenCL runtime)
 go build --tags gpu
 ```
 
@@ -29,14 +33,10 @@ Set-Item -Path env:CGO_LDFLAGS -Value "-L C:\PROGRA~2\AMDAPP~1\3.0\lib\x86_64"
 
 ## テスト
 
-### CPU
-
-```
+```sh
+# CPU
 go test --tags cpu ./...
-```
 
-### GPU
-
-```
+# GPU
 go test --tags gpu ./...
 ```

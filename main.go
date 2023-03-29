@@ -1,14 +1,15 @@
-//go:build gpu
+//go:build cpu
 
 package main
 
 import (
 	"flag"
-	"go-dl-from-zero/gmat"
 	"log"
 	"math/rand"
 	"os"
 	"runtime/pprof"
+
+	"gonum.org/v1/gonum/mat"
 )
 
 const dataSize = 1_000_000
@@ -31,22 +32,16 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	gpu, err := gmat.NewBackend()
-	if err != nil {
-		panic(err)
-	}
-	defer gpu.Release()
-
-	a, b := make([]float32, dataSize), make([]float32, dataSize)
+	a, b := make([]float64, dataSize), make([]float64, dataSize)
 	for cnt := 0; cnt < 1_000; cnt++ {
 		for i := 0; i < dataSize; i++ {
-			a[i] = rand.Float32()
-			b[i] = rand.Float32()
+			a[i] = rand.Float64()
+			b[i] = rand.Float64()
 		}
 
-		va, vb := gpu.NewVecDense(a), gpu.NewVecDense(b)
+		va, vb := mat.NewVecDense(dataSize, a), mat.NewVecDense(dataSize, b)
 
-		gpu.Dot(va, vb)
+		mat.Dot(va, vb)
 	}
 
 	if *memProfile != "" {

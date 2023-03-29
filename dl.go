@@ -1,12 +1,12 @@
 package main
 
-import "go-dl-from-zero/mat"
+import "go-dl-from-zero/gmat"
 
 type DeepLearning struct {
-	mat.Backend
+	*gmat.Backend
 }
 
-func NewDeepLearning(backend mat.Backend) DeepLearning {
+func NewDeepLearning(backend *gmat.Backend) DeepLearning {
 	return DeepLearning{Backend: backend}
 }
 
