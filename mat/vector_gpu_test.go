@@ -163,3 +163,70 @@ func assertEqualVectors(t testing.TB, got, want mat.Vector) {
 		}
 	}
 }
+
+type twoSameDimHugeVectorSource twoSameDimVectorSource
+
+func (*twoSameDimHugeVectorSource) Generate(rand *rand.Rand, size int) reflect.Value {
+	n := 1024
+	a, b := make([]float64, n), make([]float64, n)
+	for i := 0; i < n; i++ {
+		a[i] = randFloat64FromFloat32()
+		b[i] = randFloat64FromFloat32()
+	}
+	return reflect.ValueOf(&twoSameDimHugeVectorSource{
+		A: a,
+		B: b,
+	})
+}
+
+func getTwoSameDimVectorSourceFromReflectValue(rv reflect.Value) twoSameDimVectorSource {
+	return twoSameDimVectorSource{
+		A: getVectorSourceFromReflectValue(rv.FieldByName("A")),
+		B: getVectorSourceFromReflectValue(rv.FieldByName("B")),
+	}
+}
+
+func getVectorSourceFromReflectValue(rv reflect.Value) (s []float64) {
+	len, cap := rv.Len(), rv.Cap()
+	s = make([]float64, len, cap)
+	for i := 0; i < len; i++ {
+		s[i] = rv.Index(i).Float()
+	}
+	return
+}
+
+func BenchmarkDotVecByGPU(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+
+		rv, ok := quick.Value(reflect.TypeOf((*twoSameDimHugeVectorSource)(nil)), rand.New(rand.NewSource(0)))
+		if !ok {
+			b.Fatal("failed to generate random value")
+		}
+		input := getTwoSameDimVectorSourceFromReflectValue(rv.Elem())
+
+		x, y := gpu.NewVector(input.A), gpu.NewVector(input.B)
+
+		b.StartTimer()
+		gpu.Dot(x, y)
+	}
+}
+
+func BenchmarkDotVecByCPU(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+
+		rv, ok := quick.Value(reflect.TypeOf((*twoSameDimHugeVectorSource)(nil)), rand.New(rand.NewSource(0)))
+		if !ok {
+			b.Fatal("failed to generate random value")
+		}
+		input := getTwoSameDimVectorSourceFromReflectValue(rv.Elem())
+
+		x, y := cpu.NewVector(input.A), cpu.NewVector(input.B)
+
+		b.StartTimer()
+		cpu.Dot(x, y)
+	}
+}
