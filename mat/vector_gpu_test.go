@@ -198,8 +198,6 @@ func getVectorSourceFromReflectValue(rv reflect.Value) (s []float64) {
 func BenchmarkDotVecByGPU(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		b.StopTimer()
-
 		rv, ok := quick.Value(reflect.TypeOf((*twoSameDimHugeVectorSource)(nil)), rand.New(rand.NewSource(0)))
 		if !ok {
 			b.Fatal("failed to generate random value")
@@ -208,7 +206,6 @@ func BenchmarkDotVecByGPU(b *testing.B) {
 
 		x, y := gpu.NewVector(input.A), gpu.NewVector(input.B)
 
-		b.StartTimer()
 		gpu.Dot(x, y)
 	}
 }
@@ -216,8 +213,6 @@ func BenchmarkDotVecByGPU(b *testing.B) {
 func BenchmarkDotVecByCPU(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		b.StopTimer()
-
 		rv, ok := quick.Value(reflect.TypeOf((*twoSameDimHugeVectorSource)(nil)), rand.New(rand.NewSource(0)))
 		if !ok {
 			b.Fatal("failed to generate random value")
@@ -226,7 +221,6 @@ func BenchmarkDotVecByCPU(b *testing.B) {
 
 		x, y := cpu.NewVector(input.A), cpu.NewVector(input.B)
 
-		b.StartTimer()
 		cpu.Dot(x, y)
 	}
 }
