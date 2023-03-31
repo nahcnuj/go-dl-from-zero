@@ -2,7 +2,7 @@
 
 [オライリーの「ゼロから作るDeep Learning」（斎藤康毅著）](https://www.oreilly.co.jp/books/9784873117584/)をGo言語でやっていくリポジトリ。
 
-この本では扱われていないが、OpenCLによる実装にもチャレンジする。
+この本ではGPU上で実行するための実装については扱われていないが、本リポジトリではOpenCLを使った実装にもチャレンジする。
 
 なお、OpenCLで標準的に扱えるのは`float32`（`float`、単精度浮動小数点数）型で、[Gonum](https://pkg.go.dev/gonum.org/v1/gonum)で扱えるのは`float64`（`double`倍精度浮動小数点数）型と異なっているため、CPU実装とGPU実装の間に互換性はない。
 
