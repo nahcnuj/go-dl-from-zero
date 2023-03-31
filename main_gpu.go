@@ -4,11 +4,12 @@ package main
 
 import (
 	"flag"
-	"go-dl-from-zero/gmat"
 	"log"
 	"math/rand"
 	"os"
 	"runtime/pprof"
+
+	"github.com/nahcnuj/go-dl-from-zero/gmat"
 )
 
 const dataSize = 1_000_000

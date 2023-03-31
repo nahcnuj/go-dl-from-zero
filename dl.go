@@ -1,6 +1,6 @@
 package main
 
-import "go-dl-from-zero/gmat"
+import "github.com/nahcnuj/go-dl-from-zero/gmat"
 
 type DeepLearning struct {
 	*gmat.Backend

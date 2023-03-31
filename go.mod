@@ -1,4 +1,4 @@
-module go-dl-from-zero
+module github.com/nahcnuj/go-dl-from-zero
 
 go 1.20
 

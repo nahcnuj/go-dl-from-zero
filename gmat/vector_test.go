@@ -10,7 +10,7 @@ import (
 	"testing"
 	"testing/quick"
 
-	"go-dl-from-zero/gmat"
+	"github.com/nahcnuj/go-dl-from-zero/gmat"
 
 	"github.com/stretchr/testify/assert"
 	"gonum.org/v1/gonum/mat"
