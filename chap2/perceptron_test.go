@@ -44,7 +44,7 @@ func testNand[T calculator.Scalar](t *testing.T, be calculator.Backend[T]) {
 	}
 
 	for _, tc := range tests {
-		t.Run(fmt.Sprintf("%v ∧ %v == %v", tc.x, tc.y, tc.want), func(t *testing.T) {
+		t.Run(fmt.Sprintf("¬(%v ∧ %v) == %v", tc.x, tc.y, tc.want), func(t *testing.T) {
 			got, err := Nand(be, tc.x, tc.y)
 			if err != nil {
 				t.Fatal(err)
@@ -69,7 +69,7 @@ func testOr[T calculator.Scalar](t *testing.T, be calculator.Backend[T]) {
 	}
 
 	for _, tc := range tests {
-		t.Run(fmt.Sprintf("%v ∧ %v == %v", tc.x, tc.y, tc.want), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%v ∨ %v == %v", tc.x, tc.y, tc.want), func(t *testing.T) {
 			got, err := Or(be, tc.x, tc.y)
 			if err != nil {
 				t.Fatal(err)
