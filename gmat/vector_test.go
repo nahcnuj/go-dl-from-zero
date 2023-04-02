@@ -132,24 +132,17 @@ func TestDotVec(t *testing.T) {
 		})
 	}
 
-	var n, c int
 	assertion := func(v *twoSameHugeDimGmatVector) bool {
 		got, err := gpu.Dot(v.A, v.B)
 		if err != nil {
 			t.Log(err)
 			return false
 		}
-		ok := assert.InEpsilon(t, v.WantDot, got, epsilon, "want %.8f, got %.8f, relerror %20.8f", v.WantDot, got, (v.WantDot-got)/v.WantDot)
-		if !ok {
-			c++
-		}
-		n++
-		return true
+		return assert.InEpsilon(t, v.WantDot, got, epsilon, "want %.8f, got %.8f, relerror %20.8f", v.WantDot, got, (v.WantDot-got)/v.WantDot)
 	}
 	if err := quick.Check(assertion, nil); err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("%d NG of %d tries", c, n)
 }
 
 type TestVecDense struct {
