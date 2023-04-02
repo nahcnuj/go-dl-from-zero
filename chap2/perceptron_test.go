@@ -10,12 +10,12 @@ import (
 func testAnd[T calculator.Scalar](t *testing.T, be calculator.Backend[T]) {
 	tests := []struct {
 		x, y T
-		want bool
+		want T
 	}{
-		{x: 0, y: 0, want: false},
-		{x: 1, y: 0, want: false},
-		{x: 0, y: 1, want: false},
-		{x: 1, y: 1, want: true},
+		{x: 0, y: 0, want: 0},
+		{x: 1, y: 0, want: 0},
+		{x: 0, y: 1, want: 0},
+		{x: 1, y: 1, want: 1},
 	}
 
 	for _, tc := range tests {
@@ -35,12 +35,12 @@ func testAnd[T calculator.Scalar](t *testing.T, be calculator.Backend[T]) {
 func testNand[T calculator.Scalar](t *testing.T, be calculator.Backend[T]) {
 	tests := []struct {
 		x, y T
-		want bool
+		want T
 	}{
-		{x: 0, y: 0, want: true},
-		{x: 1, y: 0, want: true},
-		{x: 0, y: 1, want: true},
-		{x: 1, y: 1, want: false},
+		{x: 0, y: 0, want: 1},
+		{x: 1, y: 0, want: 1},
+		{x: 0, y: 1, want: 1},
+		{x: 1, y: 1, want: 0},
 	}
 
 	for _, tc := range tests {
@@ -60,12 +60,12 @@ func testNand[T calculator.Scalar](t *testing.T, be calculator.Backend[T]) {
 func testOr[T calculator.Scalar](t *testing.T, be calculator.Backend[T]) {
 	tests := []struct {
 		x, y T
-		want bool
+		want T
 	}{
-		{x: 0, y: 0, want: false},
-		{x: 1, y: 0, want: true},
-		{x: 0, y: 1, want: true},
-		{x: 1, y: 1, want: true},
+		{x: 0, y: 0, want: 0},
+		{x: 1, y: 0, want: 1},
+		{x: 0, y: 1, want: 1},
+		{x: 1, y: 1, want: 1},
 	}
 
 	for _, tc := range tests {
