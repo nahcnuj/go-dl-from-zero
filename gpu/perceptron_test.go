@@ -13,6 +13,7 @@ func TestAnd(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer gpu.Release()
 
 	tests := []struct {
 		name string
