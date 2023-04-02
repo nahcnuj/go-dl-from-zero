@@ -85,7 +85,7 @@ func TestAddVectors(t *testing.T) {
 // 	})
 // }
 
-func TestDotVec(t *testing.T) {
+func TestDot(t *testing.T) {
 	tests := []struct {
 		x    []float32
 		y    []float32
@@ -137,7 +137,7 @@ func (*TestGPUVector) Generate(rand *rand.Rand, size int) reflect.Value {
 	return reflect.ValueOf(&TestGPUVector{gpu.NewVector(t).(*calculator.GPUVector)})
 }
 
-func BenchmarkDotVecByGPU(b *testing.B) {
+func BenchmarkDot(b *testing.B) {
 	assertion := func(v *twoSameHugeDimGPUVector) bool {
 		got, err := gpu.Dot(v.A, v.B)
 		if err != nil {

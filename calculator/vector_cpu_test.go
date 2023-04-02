@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func BenchmarkDotVecByCPU(b *testing.B) {
+func BenchmarkDot(b *testing.B) {
 	assertion := func(v *twoSameHugeDimCPUVector) bool {
 		got, _ := cpu.Dot(v.A, v.B)
 		return assert.InEpsilon(b, v.WantDot, got, epsilon)
