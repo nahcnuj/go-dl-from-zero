@@ -37,3 +37,13 @@ func TestOrByGPU(t *testing.T) {
 
 	testOr(t, gpu)
 }
+
+func TestXorByGPU(t *testing.T) {
+	gpu, err := calculator.NewGPUBackend()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer gpu.Release()
+
+	testXor(t, gpu)
+}

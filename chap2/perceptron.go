@@ -57,3 +57,22 @@ func Or[T calculator.Scalar](be calculator.Backend[T], x1, x2 T) (T, error) {
 		return 0, nil
 	}
 }
+
+// Xor calculates XOR of given two numbers by perceptron mechanism.
+//
+//	(x₁)-(s₁)
+//	    ☓    >( y )
+//	(x₂)-(s₂)
+func Xor[T calculator.Scalar](be calculator.Backend[T], x1, x2 T) (T, error) {
+	s1, err := Nand(be, x1, x2)
+	if err != nil {
+		return 0, nil
+	}
+
+	s2, err := Or(be, x1, x2)
+	if err != nil {
+		return 0, nil
+	}
+
+	return And(be, s1, s2)
+}

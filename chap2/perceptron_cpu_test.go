@@ -23,3 +23,9 @@ func TestOrByCPU(t *testing.T) {
 
 	testOr(t, cpu)
 }
+
+func TestXorByCPU(t *testing.T) {
+	cpu := calculator.NewCPUBackend()
+
+	testXor(t, cpu)
+}
