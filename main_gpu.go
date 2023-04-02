@@ -9,7 +9,7 @@ import (
 	"os"
 	"runtime/pprof"
 
-	"github.com/nahcnuj/go-dl-from-zero/gmat"
+	"github.com/nahcnuj/go-dl-from-zero/calculator"
 )
 
 const dataSize = 1_000_000
@@ -32,7 +32,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	gpu, err := gmat.NewBackend()
+	gpu, err := calculator.NewGPUBackend()
 	if err != nil {
 		panic(err)
 	}
@@ -45,7 +45,7 @@ func main() {
 			b[i] = rand.Float32()
 		}
 
-		va, vb := gpu.NewVecDense(a), gpu.NewVecDense(b)
+		va, vb := gpu.NewVector(a), gpu.NewVector(b)
 
 		gpu.Dot(va, vb)
 	}

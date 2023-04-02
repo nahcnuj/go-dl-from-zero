@@ -1,6 +1,9 @@
-package gmat
+//go:build gpu
+
+package calculator
 
 import (
+	_ "embed"
 	"errors"
 	"fmt"
 	"os"
@@ -8,19 +11,8 @@ import (
 	"github.com/PassKeyRa/go-opencl/opencl"
 )
 
-const programCode = `
-kernel void vec_add(global float *out, global float *a, global float *b)
-{
-	size_t i = get_global_id(0);
-	out[i] = a[i] + b[i];
-}
-
-kernel void vec_dot(global float *out, global float *a, global float *b)
-{
-	size_t gid = get_global_id(0);
-	out[gid] = a[gid] * b[gid];
-}
-`
+//go:embed kernel.cl
+var code string
 
 func getKernelNames() []string {
 	return []string{
@@ -29,24 +21,26 @@ func getKernelNames() []string {
 	}
 }
 
-type Backend struct {
+type GPUBackend struct {
 	device  opencl.Device
 	context opencl.Context
 	kernels map[string]opencl.Kernel
 }
 
-func NewBackend() (backend *Backend, err error) {
-	device, err := getDevice()
+var _ Backend[float32] = &GPUBackend{}
+
+func NewGPUBackend() (Backend[float32], error) {
+	device, err := getGPUDevice()
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	context, err := device.CreateContext()
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	backend = &Backend{
+	backend := &GPUBackend{
 		device:  *device,
 		context: context,
 		kernels: make(map[string]opencl.Kernel),
@@ -54,29 +48,28 @@ func NewBackend() (backend *Backend, err error) {
 
 	if err = backend.buildKernels(); err != nil {
 		backend.Release()
-		return
+		return nil, err
 	}
 
-	return
+	return backend, nil
 }
 
-func (b *Backend) Release() {
-	for _, k := range b.kernels {
+func (gpu *GPUBackend) Release() {
+	for _, k := range gpu.kernels {
 		k.Release()
 	}
-	b.context.Release()
-	b = nil
+	gpu.context.Release()
 }
 
-func (b *Backend) buildKernels() error {
-	program, err := b.context.CreateProgramWithSource(programCode)
+func (gpu *GPUBackend) buildKernels() error {
+	program, err := gpu.context.CreateProgramWithSource(code)
 	if err != nil {
 		return err
 	}
 	defer program.Release()
 
 	var log string
-	if err := program.Build(b.device, &log); err != nil || len(log) > 0 {
+	if err := program.Build(gpu.device, &log); err != nil || len(log) > 0 {
 		fmt.Fprintln(os.Stderr, log)
 		return err
 	}
@@ -86,12 +79,12 @@ func (b *Backend) buildKernels() error {
 		if err != nil {
 			return err
 		}
-		b.kernels[name] = kernel
+		gpu.kernels[name] = kernel
 	}
 	return nil
 }
 
-func getDevice() (*opencl.Device, error) {
+func getGPUDevice() (*opencl.Device, error) {
 	platforms, err := opencl.GetPlatforms()
 	if err != nil {
 		return nil, err

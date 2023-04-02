@@ -1,6 +1,6 @@
 //go:build gpu
 
-package gmat
+package calculator
 
 import (
 	"errors"
@@ -16,39 +16,50 @@ var (
 	floatSize = uint64(unsafe.Sizeof(dummy.float))
 )
 
-type Vector interface {
-	Len() int
-	AtVec(i int) float32
+// GPUVector represents a vector value on GPU, implementing calculator.Vector.
+type GPUVector struct {
+	data []float32
 }
 
-type VecDense struct {
-	Data []float32
+// Dim returns the vector dimension.
+func (v *GPUVector) Dim() int {
+	return len(v.data)
 }
 
-func (*Backend) NewVecDense(v []float32) *VecDense {
-	return &VecDense{v}
+// Raw returns a slice of elements of the vector
+func (v *GPUVector) Raw() []float32 {
+	return v.data
 }
 
-func (*Backend) ZeroVector(dim int) Vector {
-	return &VecDense{make([]float32, dim)}
+// NewVector creates a vector.
+func (*GPUBackend) NewVector(elems []float32) Vector[float32] {
+	return &GPUVector{data: elems}
 }
 
-func (v *VecDense) Len() int {
-	return len(v.Data)
+// AddVectors adds given vectors and returns the result.
+func (b *GPUBackend) AddVectors(vs ...Vector[float32]) (sum Vector[float32], err error) {
+	sum = b.NewVector(make([]float32, vs[0].Dim()))
+	for _, v := range vs {
+		sum, err = b.addTwoVectors(sum, v)
+		if err != nil {
+			return
+		}
+	}
+	return
 }
 
-func (v *VecDense) AtVec(i int) float32 {
-	return v.Data[i]
+func (b *GPUBackend) Dot(x, y Vector[float32]) (float32, error) {
+	return b.dot(x, y)
 }
 
-func (b *Backend) AddVectors(x Vector, y Vector) (add Vector, err error) {
+func (b *GPUBackend) addTwoVectors(x, y Vector[float32]) (sum *GPUVector, err error) {
 	k, ok := b.kernels["vec_add"]
 	if !ok {
 		err = errors.New("kernel function not found")
 		return
 	}
 
-	dim := uint64(x.Len())
+	dim := uint64(x.Dim())
 
 	retBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemWriteOnly}, dim*floatSize)
 	if err != nil {
@@ -84,10 +95,10 @@ func (b *Backend) AddVectors(x Vector, y Vector) (add Vector, err error) {
 	}
 	defer queue.Release()
 
-	if err = queue.EnqueueWriteBuffer(aBuf, true, x.(*VecDense).Data); err != nil {
+	if err = queue.EnqueueWriteBuffer(aBuf, true, x.Raw()); err != nil {
 		return
 	}
-	if err = queue.EnqueueWriteBuffer(bBuf, true, y.(*VecDense).Data); err != nil {
+	if err = queue.EnqueueWriteBuffer(bBuf, true, y.Raw()); err != nil {
 		return
 	}
 
@@ -102,18 +113,18 @@ func (b *Backend) AddVectors(x Vector, y Vector) (add Vector, err error) {
 	if err = queue.EnqueueReadBuffer(retBuf, true, ret); err != nil {
 		return
 	}
-	add = &VecDense{ret}
+	sum = &GPUVector{ret}
 	return
 }
 
-func (b *Backend) Dot(x Vector, y Vector) (dot float32, err error) {
+func (b *GPUBackend) dot(x, y Vector[float32]) (dot float32, err error) {
 	k, ok := b.kernels["vec_dot"]
 	if !ok {
 		err = errors.New("kernel function not found")
 		return
 	}
 
-	dim := uint64(x.Len())
+	dim := uint64(x.Dim())
 
 	retBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemWriteOnly}, dim*floatSize)
 	if err != nil {
@@ -149,10 +160,10 @@ func (b *Backend) Dot(x Vector, y Vector) (dot float32, err error) {
 	}
 	defer queue.Release()
 
-	if err = queue.EnqueueWriteBuffer(aBuf, true, x.(*VecDense).Data); err != nil {
+	if err = queue.EnqueueWriteBuffer(aBuf, true, x.Raw()); err != nil {
 		return
 	}
-	if err = queue.EnqueueWriteBuffer(bBuf, true, y.(*VecDense).Data); err != nil {
+	if err = queue.EnqueueWriteBuffer(bBuf, true, y.Raw()); err != nil {
 		return
 	}
 

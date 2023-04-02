@@ -1,5 +1,3 @@
-//go:build cpu
-
 package main
 
 import (
