@@ -20,6 +20,7 @@ func getKernelNames() []string {
 		"vectorDot",
 		"vectorElementWiseGreaterThan",
 		"vectorSigmoid",
+		"vectorReLU",
 	}
 }
 

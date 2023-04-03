@@ -195,6 +195,40 @@ func TestSigmoid(t *testing.T) {
 	}
 }
 
+func TestReLU(t *testing.T) {
+	tests := []struct {
+		x    []float32
+		want []float32
+	}{
+		{x: []float32{-1e6, -1, -1e-6, 0, 1e-6, 1, 1e6}, want: []float32{0, 0, 0, 0, 1e-6, 1, 1e6}},
+	}
+
+	for _, tc := range tests {
+		t.Run(fmt.Sprintf("ReLU(%v) = %v", tc.x, tc.want), func(t *testing.T) {
+			x := gpu.NewVector(tc.x)
+
+			got, err := gpu.ReLU(x)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			assert.InDeltaSlice(t, tc.want, got.Raw(), delta)
+		})
+	}
+
+	assertion := func(v *twoSameHugeDimGPUVectors) bool {
+		got, err := gpu.ReLU(v.A)
+		if err != nil {
+			t.Log(err)
+			return false
+		}
+		return assert.InDeltaSlice(t, v.WantReLU.Raw(), got.Raw(), delta)
+	}
+	if err := quick.Check(assertion, nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
 type TestGPUVector struct {
 	*calculator.GPUVector
 }
@@ -234,6 +268,7 @@ type twoSameHugeDimGPUVectors struct {
 	WantDot         float32
 	WantGreaterThan calculator.Vector[float32]
 	WantSigmoid     calculator.Vector[float32]
+	WantReLU        calculator.Vector[float32]
 }
 
 func (*twoSameHugeDimGPUVectors) Generate(rand *rand.Rand, size int) reflect.Value {
@@ -244,6 +279,7 @@ func (*twoSameHugeDimGPUVectors) Generate(rand *rand.Rand, size int) reflect.Val
 		dot     float32
 		gt      = make([]float32, n)
 		sigmoid = make([]float32, n)
+		relu    = make([]float32, n)
 	)
 	for i := 0; i < n; i++ {
 		a[i] = rand.Float32()
@@ -254,6 +290,7 @@ func (*twoSameHugeDimGPUVectors) Generate(rand *rand.Rand, size int) reflect.Val
 			gt[i] = 1
 		}
 		sigmoid[i] = float32(1 / (1 + math.Exp(float64(-a[i]))))
+		relu[i] = float32(math.Max(0, float64(a[i])))
 	}
 	return reflect.ValueOf(&twoSameHugeDimGPUVectors{
 		A:               gpu.NewVector(a),
@@ -262,5 +299,6 @@ func (*twoSameHugeDimGPUVectors) Generate(rand *rand.Rand, size int) reflect.Val
 		WantDot:         dot,
 		WantGreaterThan: gpu.NewVector(gt),
 		WantSigmoid:     gpu.NewVector(sigmoid),
+		WantReLU:        gpu.NewVector(relu),
 	})
 }

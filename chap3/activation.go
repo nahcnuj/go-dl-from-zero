@@ -9,3 +9,7 @@ func Step[T calculator.Scalar](be calculator.Backend[T], v calculator.Vector[T])
 func Sigmoid[T calculator.Scalar](be calculator.Backend[T], v calculator.Vector[T]) (calculator.Vector[T], error) {
 	return be.Sigmoid(v)
 }
+
+func ReLU[T calculator.Scalar](be calculator.Backend[T], v calculator.Vector[T]) (calculator.Vector[T], error) {
+	return be.ReLU(v)
+}

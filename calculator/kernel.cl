@@ -21,3 +21,9 @@ kernel void vectorSigmoid(global float *out, global float *x)
 	size_t gid = get_global_id(0);
 	out[gid] = 1.0 / (1 + exp(-x[gid]));
 }
+
+kernel void vectorReLU(global float *out, global float *x)
+{
+	size_t gid = get_global_id(0);
+	out[gid] = max((float)0, x[gid]);
+}

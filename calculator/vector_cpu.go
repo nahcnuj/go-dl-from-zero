@@ -66,3 +66,12 @@ func (cpu CPUBackend) Sigmoid(x Vector[float64]) (Vector[float64], error) {
 	}
 	return cpu.NewVector(ret), nil
 }
+
+// ReLU applys Rectified Linear Unit function to given vector
+func (cpu CPUBackend) ReLU(x Vector[float64]) (Vector[float64], error) {
+	ret := make([]float64, x.Dim())
+	for i, x := range x.Raw() {
+		ret[i] = math.Max(0, x)
+	}
+	return cpu.NewVector(ret), nil
+}
