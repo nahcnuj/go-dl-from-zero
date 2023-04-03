@@ -14,6 +14,8 @@ type Backend[T Scalar] interface {
 	Release()
 
 	NewVector(elems []T) Vector[T]
+	ZeroVector(dim int) Vector[T]
 	AddVectors(vs ...Vector[T]) (Vector[T], error)
 	Dot(x, y Vector[T]) (T, error)
+	VectorElementWiseGreaterThan(x, y Vector[T]) (Vector[T], error)
 }

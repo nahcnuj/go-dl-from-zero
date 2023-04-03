@@ -18,6 +18,7 @@ func getKernelNames() []string {
 	return []string{
 		"vec_add",
 		"vec_dot",
+		"vectorElementWiseGreaterThan",
 	}
 }
 

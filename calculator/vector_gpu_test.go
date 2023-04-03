@@ -124,6 +124,42 @@ func TestDot(t *testing.T) {
 	}
 }
 
+func TestVectorElementWiseGreaterThan(t *testing.T) {
+	tests := []struct {
+		x, y []float32
+		want []float32
+	}{
+		{x: []float32{1, 1, 1}, y: []float32{0, 0, 0}, want: []float32{1, 1, 1}},
+		{x: []float32{0, 0, 0}, y: []float32{0, 0, 0}, want: []float32{0, 0, 0}},
+		{x: []float32{1e-6, 0, -1e-6}, y: []float32{0, 0, 0}, want: []float32{1, 0, 0}},
+	}
+
+	for _, tc := range tests {
+		t.Run(fmt.Sprintf("%v > %v = %v", tc.x, tc.y, tc.want), func(t *testing.T) {
+			x, y := gpu.NewVector(tc.x), gpu.NewVector(tc.y)
+
+			got, err := gpu.VectorElementWiseGreaterThan(x, y)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			assert.InDeltaSlice(t, tc.want, got.Raw(), delta)
+		})
+	}
+
+	assertion := func(v *twoSameHugeDimGPUVector) bool {
+		got, err := gpu.VectorElementWiseGreaterThan(v.A, v.B)
+		if err != nil {
+			t.Log(err)
+			return false
+		}
+		return assert.InDeltaSlice(t, v.WantGreaterThan.Raw(), got.Raw(), delta)
+	}
+	if err := quick.Check(assertion, nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
 type TestGPUVector struct {
 	*calculator.GPUVector
 }
@@ -158,24 +194,34 @@ func BenchmarkDot(b *testing.B) {
 const hugeDim = 1024
 
 type twoSameHugeDimGPUVector struct {
-	A, B    *calculator.GPUVector
-	WantAdd *calculator.GPUVector
-	WantDot float32
+	A, B            *calculator.GPUVector
+	WantAdd         *calculator.GPUVector
+	WantDot         float32
+	WantGreaterThan *calculator.GPUVector
 }
 
 func (*twoSameHugeDimGPUVector) Generate(rand *rand.Rand, size int) reflect.Value {
-	n := hugeDim
-	a, b, add, dot := make([]float32, n), make([]float32, n), make([]float32, n), float32(0)
+	var (
+		n    = hugeDim
+		a, b = make([]float32, n), make([]float32, n)
+		add  = make([]float32, n)
+		dot  float32
+		gt   = make([]float32, n)
+	)
 	for i := 0; i < n; i++ {
 		a[i] = rand.Float32()
 		b[i] = rand.Float32()
 		add[i] = a[i] + b[i]
 		dot += a[i] * b[i]
+		if a[i] > b[i] {
+			gt[i] = 1
+		}
 	}
 	return reflect.ValueOf(&twoSameHugeDimGPUVector{
-		A:       gpu.NewVector(a).(*calculator.GPUVector),
-		B:       gpu.NewVector(b).(*calculator.GPUVector),
-		WantAdd: gpu.NewVector(add).(*calculator.GPUVector),
-		WantDot: dot,
+		A:               gpu.NewVector(a).(*calculator.GPUVector),
+		B:               gpu.NewVector(b).(*calculator.GPUVector),
+		WantAdd:         gpu.NewVector(add).(*calculator.GPUVector),
+		WantDot:         dot,
+		WantGreaterThan: gpu.NewVector(gt).(*calculator.GPUVector),
 	})
 }
