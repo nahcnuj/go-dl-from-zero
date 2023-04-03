@@ -16,7 +16,8 @@ func main() {
 	flag.Parse()
 
 	plots := map[string]func() *plot.Plot{
-		"xor": plotXor,
+		"xor":        plotXor,
+		"activation": plotActivationFuncs,
 	}
 	for name, f := range plots {
 		path := filepath.Join(*outDir, fmt.Sprintf("%s.png", name))
