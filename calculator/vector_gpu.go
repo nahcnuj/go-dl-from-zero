@@ -58,7 +58,7 @@ func (b *GPUBackend) Dot(x, y Vector[float32]) (float32, error) {
 	return b.dot(x, y)
 }
 
-// VectorElementWiseGreaterThan compares each element of given two vectors, returns a vector that each element is 1 if
+// VectorElementWiseGreaterThan compares given two vectors element-wise
 func (b *GPUBackend) VectorElementWiseGreaterThan(x, y Vector[float32]) (Vector[float32], error) {
 	return b.vectorElementWiseGreaterThan(x, y)
 }

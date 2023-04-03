@@ -45,7 +45,7 @@ func (CPUBackend) Dot(x, y Vector[float64]) (float64, error) {
 	return mat.Dot(x.(*CPUVector).dense, y.(*CPUVector).dense), nil
 }
 
-// VectorElementWiseGreaterThan compares each element of given two vectors, returns a vector that each element is 1 if
+// VectorElementWiseGreaterThan compares given two vectors element-wise
 func (cpu CPUBackend) VectorElementWiseGreaterThan(x, y Vector[float64]) (Vector[float64], error) {
 	xs, ys := x.Raw(), y.Raw()
 
