@@ -4,6 +4,7 @@ package calculator_test
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"reflect"
 	"testing"
@@ -160,6 +161,40 @@ func TestVectorElementWiseGreaterThan(t *testing.T) {
 	}
 }
 
+func TestSigmoid(t *testing.T) {
+	tests := []struct {
+		x    []float32
+		want []float32
+	}{
+		{x: []float32{0}, want: []float32{0.5}},
+	}
+
+	for _, tc := range tests {
+		t.Run(fmt.Sprintf("sigmoid(%v) = %v", tc.x, tc.want), func(t *testing.T) {
+			x := gpu.NewVector(tc.x)
+
+			got, err := gpu.Sigmoid(x)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			assert.InDeltaSlice(t, tc.want, got.Raw(), delta)
+		})
+	}
+
+	assertion := func(v *twoSameHugeDimGPUVector) bool {
+		got, err := gpu.Sigmoid(v.A)
+		if err != nil {
+			t.Log(err)
+			return false
+		}
+		return assert.InDeltaSlice(t, v.WantSigmoid.Raw(), got.Raw(), delta)
+	}
+	if err := quick.Check(assertion, nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
 type TestGPUVector struct {
 	*calculator.GPUVector
 }
@@ -198,15 +233,17 @@ type twoSameHugeDimGPUVector struct {
 	WantAdd         *calculator.GPUVector
 	WantDot         float32
 	WantGreaterThan *calculator.GPUVector
+	WantSigmoid     *calculator.GPUVector
 }
 
 func (*twoSameHugeDimGPUVector) Generate(rand *rand.Rand, size int) reflect.Value {
 	var (
-		n    = hugeDim
-		a, b = make([]float32, n), make([]float32, n)
-		add  = make([]float32, n)
-		dot  float32
-		gt   = make([]float32, n)
+		n       = hugeDim
+		a, b    = make([]float32, n), make([]float32, n)
+		add     = make([]float32, n)
+		dot     float32
+		gt      = make([]float32, n)
+		sigmoid = make([]float32, n)
 	)
 	for i := 0; i < n; i++ {
 		a[i] = rand.Float32()
@@ -216,6 +253,7 @@ func (*twoSameHugeDimGPUVector) Generate(rand *rand.Rand, size int) reflect.Valu
 		if a[i] > b[i] {
 			gt[i] = 1
 		}
+		sigmoid[i] = float32(1 / (1 + math.Exp(float64(-a[i]))))
 	}
 	return reflect.ValueOf(&twoSameHugeDimGPUVector{
 		A:               gpu.NewVector(a).(*calculator.GPUVector),
@@ -223,5 +261,6 @@ func (*twoSameHugeDimGPUVector) Generate(rand *rand.Rand, size int) reflect.Valu
 		WantAdd:         gpu.NewVector(add).(*calculator.GPUVector),
 		WantDot:         dot,
 		WantGreaterThan: gpu.NewVector(gt).(*calculator.GPUVector),
+		WantSigmoid:     gpu.NewVector(sigmoid).(*calculator.GPUVector),
 	})
 }

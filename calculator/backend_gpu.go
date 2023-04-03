@@ -19,6 +19,7 @@ func getKernelNames() []string {
 		"vec_add",
 		"vec_dot",
 		"vectorElementWiseGreaterThan",
+		"vectorSigmoid",
 	}
 }
 

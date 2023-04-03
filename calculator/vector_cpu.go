@@ -1,6 +1,10 @@
 package calculator
 
-import "gonum.org/v1/gonum/mat"
+import (
+	"math"
+
+	"gonum.org/v1/gonum/mat"
+)
 
 // CPUVector represents a vector value on CPU, wrapping *mat.VecDense of gonum/mat.
 type CPUVector struct {
@@ -46,10 +50,19 @@ func (cpu CPUBackend) VectorElementWiseGreaterThan(x, y Vector[float64]) (Vector
 	xs, ys := x.Raw(), y.Raw()
 
 	ret := make([]float64, x.Dim())
-	for i := range x.Raw() {
+	for i := range xs {
 		if xs[i] > ys[i] {
 			ret[i] = 1
 		}
+	}
+	return cpu.NewVector(ret), nil
+}
+
+// Sigmoid applys sigmoid function to given vector
+func (cpu CPUBackend) Sigmoid(x Vector[float64]) (Vector[float64], error) {
+	ret := make([]float64, x.Dim())
+	for i, x := range x.Raw() {
+		ret[i] = 1 / (1 + math.Exp(-x))
 	}
 	return cpu.NewVector(ret), nil
 }

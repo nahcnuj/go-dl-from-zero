@@ -63,6 +63,11 @@ func (b *GPUBackend) VectorElementWiseGreaterThan(x, y Vector[float32]) (Vector[
 	return b.vectorElementWiseGreaterThan(x, y)
 }
 
+// Sigmoid applys sigmoid function to given vector.
+func (b *GPUBackend) Sigmoid(x Vector[float32]) (sigmoid Vector[float32], err error) {
+	return b.sigmoid(x)
+}
+
 func (b *GPUBackend) addTwoVectors(x, y Vector[float32]) (sum *GPUVector, err error) {
 	k, ok := b.kernels["vec_add"]
 	if !ok {
@@ -258,5 +263,58 @@ func (b *GPUBackend) vectorElementWiseGreaterThan(x, y Vector[float32]) (stepped
 		return
 	}
 	stepped = &GPUVector{ret}
+	return
+}
+
+func (b *GPUBackend) sigmoid(x Vector[float32]) (sigmoid *GPUVector, err error) {
+	k, ok := b.kernels["vectorSigmoid"]
+	if !ok {
+		err = errors.New("kernel function not found")
+		return
+	}
+
+	dim := uint64(x.Dim())
+
+	retBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemWriteOnly}, dim*floatSize)
+	if err != nil {
+		return
+	}
+	defer retBuf.Release()
+
+	aBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
+	if err != nil {
+		return
+	}
+	defer aBuf.Release()
+
+	if err = k.SetArg(0, retBuf.Size(), &retBuf); err != nil {
+		return
+	}
+	if err = k.SetArg(1, aBuf.Size(), &aBuf); err != nil {
+		return
+	}
+
+	queue, err := b.context.CreateCommandQueue(b.device)
+	if err != nil {
+		return
+	}
+	defer queue.Release()
+
+	if err = queue.EnqueueWriteBuffer(aBuf, true, x.Raw()); err != nil {
+		return
+	}
+
+	if err = queue.EnqueueNDRangeKernel(k, 1, []uint64{dim}); err != nil {
+		return
+	}
+
+	queue.Flush()
+	queue.Finish()
+
+	ret := make([]float32, dim)
+	if err = queue.EnqueueReadBuffer(retBuf, true, ret); err != nil {
+		return
+	}
+	sigmoid = &GPUVector{ret}
 	return
 }

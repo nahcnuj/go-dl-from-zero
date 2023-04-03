@@ -18,4 +18,5 @@ type Backend[T Scalar] interface {
 	AddVectors(vs ...Vector[T]) (Vector[T], error)
 	Dot(x, y Vector[T]) (T, error)
 	VectorElementWiseGreaterThan(x, y Vector[T]) (Vector[T], error)
+	Sigmoid(x Vector[T]) (Vector[T], error)
 }

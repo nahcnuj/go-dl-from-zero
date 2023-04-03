@@ -15,3 +15,9 @@ kernel void vectorElementWiseGreaterThan(global float *out, global float *x, glo
 	size_t gid = get_global_id(0);
 	out[gid] = x[gid] > y[gid] ? 1.0 : 0;
 }
+
+kernel void vectorSigmoid(global float *out, global float *x)
+{
+	size_t gid = get_global_id(0);
+	out[gid] = 1.0 / (1 + exp(-x[gid]));
+}
