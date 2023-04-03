@@ -69,7 +69,7 @@ func (b *GPUBackend) Sigmoid(x Vector[float32]) (sigmoid Vector[float32], err er
 }
 
 func (b *GPUBackend) addTwoVectors(x, y Vector[float32]) (sum *GPUVector, err error) {
-	k, ok := b.kernels["vec_add"]
+	k, ok := b.kernels["vectorAdd"]
 	if !ok {
 		err = errors.New("kernel function not found")
 		return
@@ -134,7 +134,7 @@ func (b *GPUBackend) addTwoVectors(x, y Vector[float32]) (sum *GPUVector, err er
 }
 
 func (b *GPUBackend) dot(x, y Vector[float32]) (dot float32, err error) {
-	k, ok := b.kernels["vec_dot"]
+	k, ok := b.kernels["vectorDot"]
 	if !ok {
 		err = errors.New("kernel function not found")
 		return

@@ -16,8 +16,8 @@ var code string
 
 func getKernelNames() []string {
 	return []string{
-		"vec_add",
-		"vec_dot",
+		"vectorAdd",
+		"vectorDot",
 		"vectorElementWiseGreaterThan",
 		"vectorSigmoid",
 	}

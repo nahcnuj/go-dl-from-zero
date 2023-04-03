@@ -40,7 +40,7 @@ func TestAddVectors(t *testing.T) {
 		})
 	}
 
-	assertion := func(v *twoSameHugeDimGPUVector) bool {
+	assertion := func(v *twoSameHugeDimGPUVectors) bool {
 		got, err := gpu.AddVectors(v.A, v.B)
 		if err != nil {
 			t.Log(err)
@@ -112,7 +112,7 @@ func TestDot(t *testing.T) {
 		})
 	}
 
-	assertion := func(v *twoSameHugeDimGPUVector) bool {
+	assertion := func(v *twoSameHugeDimGPUVectors) bool {
 		got, err := gpu.Dot(v.A, v.B)
 		if err != nil {
 			t.Log(err)
@@ -148,7 +148,7 @@ func TestVectorElementWiseGreaterThan(t *testing.T) {
 		})
 	}
 
-	assertion := func(v *twoSameHugeDimGPUVector) bool {
+	assertion := func(v *twoSameHugeDimGPUVectors) bool {
 		got, err := gpu.VectorElementWiseGreaterThan(v.A, v.B)
 		if err != nil {
 			t.Log(err)
@@ -182,7 +182,7 @@ func TestSigmoid(t *testing.T) {
 		})
 	}
 
-	assertion := func(v *twoSameHugeDimGPUVector) bool {
+	assertion := func(v *twoSameHugeDimGPUVectors) bool {
 		got, err := gpu.Sigmoid(v.A)
 		if err != nil {
 			t.Log(err)
@@ -209,7 +209,7 @@ func (*TestGPUVector) Generate(rand *rand.Rand, size int) reflect.Value {
 }
 
 func BenchmarkDot(b *testing.B) {
-	assertion := func(v *twoSameHugeDimGPUVector) bool {
+	assertion := func(v *twoSameHugeDimGPUVectors) bool {
 		got, err := gpu.Dot(v.A, v.B)
 		if err != nil {
 			b.Log(err)
@@ -228,15 +228,15 @@ func BenchmarkDot(b *testing.B) {
 
 const hugeDim = 1024
 
-type twoSameHugeDimGPUVector struct {
-	A, B            *calculator.GPUVector
-	WantAdd         *calculator.GPUVector
+type twoSameHugeDimGPUVectors struct {
+	A, B            calculator.Vector[float32]
+	WantAdd         calculator.Vector[float32]
 	WantDot         float32
-	WantGreaterThan *calculator.GPUVector
-	WantSigmoid     *calculator.GPUVector
+	WantGreaterThan calculator.Vector[float32]
+	WantSigmoid     calculator.Vector[float32]
 }
 
-func (*twoSameHugeDimGPUVector) Generate(rand *rand.Rand, size int) reflect.Value {
+func (*twoSameHugeDimGPUVectors) Generate(rand *rand.Rand, size int) reflect.Value {
 	var (
 		n       = hugeDim
 		a, b    = make([]float32, n), make([]float32, n)
@@ -255,12 +255,12 @@ func (*twoSameHugeDimGPUVector) Generate(rand *rand.Rand, size int) reflect.Valu
 		}
 		sigmoid[i] = float32(1 / (1 + math.Exp(float64(-a[i]))))
 	}
-	return reflect.ValueOf(&twoSameHugeDimGPUVector{
-		A:               gpu.NewVector(a).(*calculator.GPUVector),
-		B:               gpu.NewVector(b).(*calculator.GPUVector),
-		WantAdd:         gpu.NewVector(add).(*calculator.GPUVector),
+	return reflect.ValueOf(&twoSameHugeDimGPUVectors{
+		A:               gpu.NewVector(a),
+		B:               gpu.NewVector(b),
+		WantAdd:         gpu.NewVector(add),
 		WantDot:         dot,
-		WantGreaterThan: gpu.NewVector(gt).(*calculator.GPUVector),
-		WantSigmoid:     gpu.NewVector(sigmoid).(*calculator.GPUVector),
+		WantGreaterThan: gpu.NewVector(gt),
+		WantSigmoid:     gpu.NewVector(sigmoid),
 	})
 }
