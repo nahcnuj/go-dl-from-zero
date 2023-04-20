@@ -74,8 +74,7 @@ func (gpu *GPUBackend) buildKernels() error {
 
 	var log string
 	if err := program.Build(gpu.device, &log); err != nil || len(log) > 0 {
-		fmt.Fprintln(os.Stderr, log)
-		return err
+		return errors.Join(err, errors.New(log))
 	}
 
 	for _, name := range getKernelNames() {
