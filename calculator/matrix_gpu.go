@@ -4,8 +4,9 @@ package calculator
 
 import (
 	"errors"
+	"unsafe"
 
-	"github.com/PassKeyRa/go-opencl/opencl"
+	"github.com/bbedward/go-opencl/opencl"
 )
 
 // GPUMatrix represents a matrix value for computation on GPU.
@@ -142,19 +143,19 @@ func (b *GPUBackend) multiply(x, y Matrix[float32]) (mul Matrix[float32], err er
 	}
 	defer queue.Release()
 
-	if err = queue.EnqueueWriteBuffer(rConstBuf, true, []float32{float32(r)}); err != nil {
+	if err = queue.EnqueueWriteBuffer(rConstBuf, true, intSize, unsafe.Pointer(&r)); err != nil {
 		return
 	}
-	if err = queue.EnqueueWriteBuffer(mConstBuf, true, []float32{float32(m)}); err != nil {
+	if err = queue.EnqueueWriteBuffer(mConstBuf, true, intSize, unsafe.Pointer(&m)); err != nil {
 		return
 	}
-	if err = queue.EnqueueWriteBuffer(cConstBuf, true, []float32{float32(c)}); err != nil {
+	if err = queue.EnqueueWriteBuffer(cConstBuf, true, intSize, unsafe.Pointer(&c)); err != nil {
 		return
 	}
-	if err = queue.EnqueueWriteBuffer(xBuf, true, x.Raw()); err != nil {
+	if err = queue.EnqueueWriteBuffer(xBuf, true, floatSize*uint64(len(x.Raw())), unsafe.Pointer(&x.Raw()[0])); err != nil {
 		return
 	}
-	if err = queue.EnqueueWriteBuffer(yBuf, true, y.Raw()); err != nil {
+	if err = queue.EnqueueWriteBuffer(yBuf, true, floatSize*uint64(len(y.Raw())), unsafe.Pointer(&y.Raw()[0])); err != nil {
 		return
 	}
 
@@ -166,7 +167,7 @@ func (b *GPUBackend) multiply(x, y Matrix[float32]) (mul Matrix[float32], err er
 	queue.Finish()
 
 	ret := make([]float32, r*c)
-	if err = queue.EnqueueReadBuffer(retBuf, true, ret); err != nil {
+	if err = queue.EnqueueReadBuffer(retBuf, true, floatSize*uint64(len(ret)), unsafe.Pointer(&ret[0])); err != nil {
 		return
 	}
 	mul = b.NewMatrixFromRaw(r, c, ret)

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/PassKeyRa/go-opencl/opencl"
+	"github.com/bbedward/go-opencl/opencl"
 )
 
 //go:embed kernel.cl

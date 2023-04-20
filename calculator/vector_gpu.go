@@ -6,14 +6,16 @@ import (
 	"errors"
 	"unsafe"
 
-	"github.com/PassKeyRa/go-opencl/opencl"
+	"github.com/bbedward/go-opencl/opencl"
 )
 
 var (
 	dummy = struct {
 		float float32
+		int   int32
 	}{}
 	floatSize = uint64(unsafe.Sizeof(dummy.float))
+	intSize   = uint64(unsafe.Sizeof(dummy.int))
 )
 
 // GPUVector represents a vector value for computation on GPU.
@@ -70,7 +72,7 @@ func (b *GPUBackend) Sigmoid(x Vector[float32]) (sigmoid Vector[float32], err er
 
 // ReLU applys Rectified Linear Unit function to given vector.
 func (b *GPUBackend) ReLU(x Vector[float32]) (sigmoid Vector[float32], err error) {
-	return b.reLU(x)
+	return b.relu(x)
 }
 
 func (b *GPUBackend) addTwoVectors(x, y Vector[float32]) (sum *GPUVector, err error) {
@@ -88,25 +90,25 @@ func (b *GPUBackend) addTwoVectors(x, y Vector[float32]) (sum *GPUVector, err er
 	}
 	defer retBuf.Release()
 
-	aBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
+	xBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
 	if err != nil {
 		return
 	}
-	defer aBuf.Release()
+	defer xBuf.Release()
 
-	bBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
+	yBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
 	if err != nil {
 		return
 	}
-	defer bBuf.Release()
+	defer yBuf.Release()
 
 	if err = k.SetArg(0, retBuf.Size(), &retBuf); err != nil {
 		return
 	}
-	if err = k.SetArg(1, aBuf.Size(), &aBuf); err != nil {
+	if err = k.SetArg(1, xBuf.Size(), &xBuf); err != nil {
 		return
 	}
-	if err = k.SetArg(2, bBuf.Size(), &bBuf); err != nil {
+	if err = k.SetArg(2, yBuf.Size(), &yBuf); err != nil {
 		return
 	}
 
@@ -116,12 +118,18 @@ func (b *GPUBackend) addTwoVectors(x, y Vector[float32]) (sum *GPUVector, err er
 	}
 	defer queue.Release()
 
-	if err = queue.EnqueueWriteBuffer(aBuf, true, x.Raw()); err != nil {
+	if err = queue.EnqueueWriteBuffer(xBuf, true, floatSize*uint64(len(x.Raw())), unsafe.Pointer(&x.Raw()[0])); err != nil {
 		return
 	}
-	if err = queue.EnqueueWriteBuffer(bBuf, true, y.Raw()); err != nil {
+	if err = queue.EnqueueWriteBuffer(yBuf, true, floatSize*uint64(len(y.Raw())), unsafe.Pointer(&y.Raw()[0])); err != nil {
 		return
 	}
+	// if err = queue.EnqueueWriteBuffer(xBuf, true, x.Raw()); err != nil {
+	// 	return
+	// }
+	// if err = queue.EnqueueWriteBuffer(yBuf, true, y.Raw()); err != nil {
+	// 	return
+	// }
 
 	if err = queue.EnqueueNDRangeKernel(k, 1, []uint64{dim}); err != nil {
 		return
@@ -131,10 +139,9 @@ func (b *GPUBackend) addTwoVectors(x, y Vector[float32]) (sum *GPUVector, err er
 	queue.Finish()
 
 	ret := make([]float32, dim)
-	if err = queue.EnqueueReadBuffer(retBuf, true, ret); err != nil {
-		return
+	if err = queue.EnqueueReadBuffer(retBuf, true, floatSize*uint64(len(ret)), unsafe.Pointer(&ret[0])); err == nil {
+		sum = &GPUVector{ret}
 	}
-	sum = &GPUVector{ret}
 	return
 }
 
@@ -153,25 +160,25 @@ func (b *GPUBackend) dot(x, y Vector[float32]) (dot float32, err error) {
 	}
 	defer retBuf.Release()
 
-	aBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
+	xBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
 	if err != nil {
 		return
 	}
-	defer aBuf.Release()
+	defer xBuf.Release()
 
-	bBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
+	yBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
 	if err != nil {
 		return
 	}
-	defer bBuf.Release()
+	defer yBuf.Release()
 
 	if err = k.SetArg(0, retBuf.Size(), &retBuf); err != nil {
 		return
 	}
-	if err = k.SetArg(1, aBuf.Size(), &aBuf); err != nil {
+	if err = k.SetArg(1, xBuf.Size(), &xBuf); err != nil {
 		return
 	}
-	if err = k.SetArg(2, bBuf.Size(), &bBuf); err != nil {
+	if err = k.SetArg(2, yBuf.Size(), &yBuf); err != nil {
 		return
 	}
 
@@ -181,12 +188,18 @@ func (b *GPUBackend) dot(x, y Vector[float32]) (dot float32, err error) {
 	}
 	defer queue.Release()
 
-	if err = queue.EnqueueWriteBuffer(aBuf, true, x.Raw()); err != nil {
+	if err = queue.EnqueueWriteBuffer(xBuf, true, floatSize*uint64(len(x.Raw())), unsafe.Pointer(&x.Raw()[0])); err != nil {
 		return
 	}
-	if err = queue.EnqueueWriteBuffer(bBuf, true, y.Raw()); err != nil {
+	if err = queue.EnqueueWriteBuffer(yBuf, true, floatSize*uint64(len(y.Raw())), unsafe.Pointer(&y.Raw()[0])); err != nil {
 		return
 	}
+	// if err = queue.EnqueueWriteBuffer(aBuf, true, x.Raw()); err != nil {
+	// 	return
+	// }
+	// if err = queue.EnqueueWriteBuffer(bBuf, true, y.Raw()); err != nil {
+	// 	return
+	// }
 
 	if err = queue.EnqueueNDRangeKernel(k, 1, []uint64{dim}); err != nil {
 		return
@@ -196,12 +209,10 @@ func (b *GPUBackend) dot(x, y Vector[float32]) (dot float32, err error) {
 	queue.Finish()
 
 	ret := make([]float32, dim)
-	if err = queue.EnqueueReadBuffer(retBuf, true, ret); err != nil {
-		return
-	}
-
-	for _, v := range ret {
-		dot += v
+	if err = queue.EnqueueReadBuffer(retBuf, true, floatSize*uint64(len(ret)), unsafe.Pointer(&ret[0])); err == nil {
+		for _, v := range ret {
+			dot += v
+		}
 	}
 	return
 }
@@ -221,25 +232,25 @@ func (b *GPUBackend) vectorElementWiseGreaterThan(x, y Vector[float32]) (stepped
 	}
 	defer retBuf.Release()
 
-	aBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
+	xBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
 	if err != nil {
 		return
 	}
-	defer aBuf.Release()
+	defer xBuf.Release()
 
-	bBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
+	yBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
 	if err != nil {
 		return
 	}
-	defer bBuf.Release()
+	defer yBuf.Release()
 
 	if err = k.SetArg(0, retBuf.Size(), &retBuf); err != nil {
 		return
 	}
-	if err = k.SetArg(1, aBuf.Size(), &aBuf); err != nil {
+	if err = k.SetArg(1, xBuf.Size(), &xBuf); err != nil {
 		return
 	}
-	if err = k.SetArg(2, bBuf.Size(), &bBuf); err != nil {
+	if err = k.SetArg(2, yBuf.Size(), &yBuf); err != nil {
 		return
 	}
 
@@ -249,10 +260,10 @@ func (b *GPUBackend) vectorElementWiseGreaterThan(x, y Vector[float32]) (stepped
 	}
 	defer queue.Release()
 
-	if err = queue.EnqueueWriteBuffer(aBuf, true, x.Raw()); err != nil {
+	if err = queue.EnqueueWriteBuffer(xBuf, true, floatSize*uint64(len(x.Raw())), unsafe.Pointer(&x.Raw()[0])); err != nil {
 		return
 	}
-	if err = queue.EnqueueWriteBuffer(bBuf, true, y.Raw()); err != nil {
+	if err = queue.EnqueueWriteBuffer(yBuf, true, floatSize*uint64(len(y.Raw())), unsafe.Pointer(&y.Raw()[0])); err != nil {
 		return
 	}
 
@@ -264,10 +275,9 @@ func (b *GPUBackend) vectorElementWiseGreaterThan(x, y Vector[float32]) (stepped
 	queue.Finish()
 
 	ret := make([]float32, dim)
-	if err = queue.EnqueueReadBuffer(retBuf, true, ret); err != nil {
-		return
+	if err = queue.EnqueueReadBuffer(retBuf, true, floatSize*uint64(len(ret)), unsafe.Pointer(&ret[0])); err == nil {
+		stepped = &GPUVector{ret}
 	}
-	stepped = &GPUVector{ret}
 	return
 }
 
@@ -286,16 +296,16 @@ func (b *GPUBackend) sigmoid(x Vector[float32]) (sigmoid *GPUVector, err error) 
 	}
 	defer retBuf.Release()
 
-	aBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
+	xBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
 	if err != nil {
 		return
 	}
-	defer aBuf.Release()
+	defer xBuf.Release()
 
 	if err = k.SetArg(0, retBuf.Size(), &retBuf); err != nil {
 		return
 	}
-	if err = k.SetArg(1, aBuf.Size(), &aBuf); err != nil {
+	if err = k.SetArg(1, xBuf.Size(), &xBuf); err != nil {
 		return
 	}
 
@@ -305,7 +315,7 @@ func (b *GPUBackend) sigmoid(x Vector[float32]) (sigmoid *GPUVector, err error) 
 	}
 	defer queue.Release()
 
-	if err = queue.EnqueueWriteBuffer(aBuf, true, x.Raw()); err != nil {
+	if err = queue.EnqueueWriteBuffer(xBuf, true, floatSize*uint64(len(x.Raw())), unsafe.Pointer(&x.Raw()[0])); err != nil {
 		return
 	}
 
@@ -317,14 +327,14 @@ func (b *GPUBackend) sigmoid(x Vector[float32]) (sigmoid *GPUVector, err error) 
 	queue.Finish()
 
 	ret := make([]float32, dim)
-	if err = queue.EnqueueReadBuffer(retBuf, true, ret); err != nil {
+	if err = queue.EnqueueReadBuffer(retBuf, true, floatSize*uint64(len(ret)), unsafe.Pointer(&ret[0])); err == nil {
+		sigmoid = &GPUVector{ret}
 		return
 	}
-	sigmoid = &GPUVector{ret}
 	return
 }
 
-func (b *GPUBackend) reLU(x Vector[float32]) (sigmoid *GPUVector, err error) {
+func (b *GPUBackend) relu(x Vector[float32]) (relu *GPUVector, err error) {
 	k, ok := b.kernels["vectorReLU"]
 	if !ok {
 		err = errors.New("kernel function not found")
@@ -339,16 +349,16 @@ func (b *GPUBackend) reLU(x Vector[float32]) (sigmoid *GPUVector, err error) {
 	}
 	defer retBuf.Release()
 
-	aBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
+	xBuf, err := b.context.CreateBuffer([]opencl.MemFlags{opencl.MemReadOnly}, dim*floatSize)
 	if err != nil {
 		return
 	}
-	defer aBuf.Release()
+	defer xBuf.Release()
 
 	if err = k.SetArg(0, retBuf.Size(), &retBuf); err != nil {
 		return
 	}
-	if err = k.SetArg(1, aBuf.Size(), &aBuf); err != nil {
+	if err = k.SetArg(1, xBuf.Size(), &xBuf); err != nil {
 		return
 	}
 
@@ -358,7 +368,7 @@ func (b *GPUBackend) reLU(x Vector[float32]) (sigmoid *GPUVector, err error) {
 	}
 	defer queue.Release()
 
-	if err = queue.EnqueueWriteBuffer(aBuf, true, x.Raw()); err != nil {
+	if err = queue.EnqueueWriteBuffer(xBuf, true, floatSize*uint64(len(x.Raw())), unsafe.Pointer(&x.Raw()[0])); err != nil {
 		return
 	}
 
@@ -370,9 +380,8 @@ func (b *GPUBackend) reLU(x Vector[float32]) (sigmoid *GPUVector, err error) {
 	queue.Finish()
 
 	ret := make([]float32, dim)
-	if err = queue.EnqueueReadBuffer(retBuf, true, ret); err != nil {
-		return
+	if err = queue.EnqueueReadBuffer(retBuf, true, floatSize*uint64(len(ret)), unsafe.Pointer(&ret[0])); err == nil {
+		relu = &GPUVector{ret}
 	}
-	sigmoid = &GPUVector{ret}
 	return
 }

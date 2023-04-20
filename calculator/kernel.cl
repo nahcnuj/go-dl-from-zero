@@ -10,9 +10,9 @@ kernel void vectorDot(global float *out, global float *a, global float *b)
 	out[gid] = a[gid] * b[gid];
 }
 
-kernel void matrixMultiply(constant float *fR, constant float *fM, constant float *fC, global float *out, global float *x, global float *y)
+kernel void matrixMultiply(constant int *pR, constant int *pM, constant int *pC, global float *out, global float *x, global float *y)
 {
-	int R = (int)(*fR), M = (int)(*fM), C = (int)(*fC);
+	int R = *pR, M = *pM, C = *pC;
 
 	// global id (gid) points (r,c)-th element of out, where gid == r * C + c
 	size_t gid = get_global_id(0);
