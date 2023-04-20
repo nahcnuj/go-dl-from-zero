@@ -6,7 +6,7 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-// CPUVector represents a vector value on CPU, wrapping *mat.VecDense of gonum/mat.
+// CPUVector represents a vector value for computation on CPU.
 type CPUVector struct {
 	dense *mat.VecDense
 }

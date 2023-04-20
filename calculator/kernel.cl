@@ -10,6 +10,20 @@ kernel void vectorDot(global float *out, global float *a, global float *b)
 	out[gid] = a[gid] * b[gid];
 }
 
+kernel void matrixMultiply(constant float *fR, constant float *fM, constant float *fC, global float *out, global float *x, global float *y)
+{
+	int R = (int)(*fR), M = (int)(*fM), C = (int)(*fC);
+
+	// global id (gid) points (r,c)-th element of out, where gid == r * C + c
+	size_t gid = get_global_id(0);
+	int r = gid / C, c = gid % C;
+
+	out[gid] = 0;
+	for (int i = 0; i < M; ++i) {
+		out[gid] += x[r*M+i] * y[i*C+c];
+	}
+}
+
 kernel void vectorElementWiseGreaterThan(global float *out, global float *x, global float *y)
 {
 	size_t gid = get_global_id(0);

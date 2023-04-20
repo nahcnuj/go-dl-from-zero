@@ -21,6 +21,7 @@ func getKernelNames() []string {
 		"vectorElementWiseGreaterThan",
 		"vectorSigmoid",
 		"vectorReLU",
+		"matrixMultiply",
 	}
 }
 

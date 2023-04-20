@@ -9,11 +9,6 @@ import (
 	"github.com/nahcnuj/go-dl-from-zero/calculator"
 )
 
-const (
-	delta   = 1e-5 // 許容絶対誤差
-	epsilon = 0.1  // 許容相対誤差
-)
-
 var gpu calculator.Backend[float32]
 
 func TestMain(m *testing.M) {

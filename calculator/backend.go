@@ -10,6 +10,15 @@ type Vector[T Scalar] interface {
 	Raw() []T
 }
 
+type Matrix[T Scalar] interface {
+	Rows() int
+	Cols() int
+
+	Raw() []T
+	RawRow(r int) []T
+	RawCol(c int) []T
+}
+
 type Backend[T Scalar] interface {
 	Release()
 
@@ -20,4 +29,7 @@ type Backend[T Scalar] interface {
 	VectorElementWiseGreaterThan(x, y Vector[T]) (Vector[T], error)
 	Sigmoid(x Vector[T]) (Vector[T], error)
 	ReLU(x Vector[T]) (Vector[T], error)
+
+	NewMatrix(elems [][]T) Matrix[T]
+	Multiply(x, y Matrix[T]) (Matrix[T], error)
 }

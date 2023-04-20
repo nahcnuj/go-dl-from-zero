@@ -16,7 +16,7 @@ var (
 	floatSize = uint64(unsafe.Sizeof(dummy.float))
 )
 
-// GPUVector represents a vector value on GPU, implementing calculator.Vector.
+// GPUVector represents a vector value for computation on GPU.
 type GPUVector struct {
 	data []float32
 }
